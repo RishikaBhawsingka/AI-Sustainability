@@ -1,0 +1,10 @@
+.env
+venv/
+.venv/
+node_modules/
+__pycache__/
+*.pyc
+
+# Large ML artifacts
+*.pkl
+ml/data/raw/scheduler_data.csv

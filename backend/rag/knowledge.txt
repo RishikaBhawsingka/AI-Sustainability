@@ -1,0 +1,29 @@
+Data Center Cooling
+Data centers generate heat because GPUs, CPUs, memory, and other computing equipment consume electrical power. Cooling systems remove this heat and maintain safe operating temperatures. Higher computational workloads generally increase power consumption and thermal load.
+
+GPU Thermal Management
+GPU utilization is an important indicator of GPU power demand. Higher GPU and memory utilization can be associated with higher power consumption and increased heat generation. Monitoring GPU utilization and predicted power can help identify periods of high thermal demand.
+
+Cooling Efficiency
+Cooling efficiency describes how effectively a cooling system removes heat relative to the resources used for cooling. Improving cooling efficiency can reduce unnecessary energy use while maintaining required thermal conditions.
+
+Water Efficiency
+Water-cooled systems may consume water through evaporation, cooling-tower operation, and other processes. Water efficiency can be improved by optimizing cooling operation, avoiding unnecessary cooling demand, monitoring water consumption, and maintaining appropriate operating conditions.
+
+Energy and Water Optimization
+Cooling optimization should consider both energy consumption and water consumption. Reducing cooling demand, improving equipment utilization, and operating cooling systems efficiently can help reduce resource consumption while maintaining thermal safety.
+
+GPU Power Prediction
+Machine learning can estimate GPU power consumption from workload and utilization characteristics. Predicted GPU power can be used as an input for estimating thermal demand and supporting cooling-management decisions.
+
+Thermal Load Prediction
+TLHC represents a thermal-load-related target in the thermal dataset used by Aquatherma AI. The trained Random Forest model predicts standardized TLHC values from power and temperature-related features. Because the target is standardized, the prediction should not be interpreted directly as degrees Celsius.
+
+Explainable AI
+SHAP values explain how individual input features influence a machine-learning prediction relative to the model's baseline. A positive SHAP value pushes the prediction higher, while a negative SHAP value pushes it lower. SHAP describes model behavior and should not be interpreted as proof of causation.
+
+Cooling Tower Monitoring
+Cooling-tower operational data can include water consumption, energy consumption, cooling capacity, cooling efficiency, energy savings, and CO2 emissions. These measurements can be used to monitor cooling-system performance.
+
+Aquatherma AI
+Aquatherma AI combines GPU power prediction, thermal-load prediction, cooling-system operational data, explainable AI, and retrieval-augmented generation. The system uses these outputs to provide understandable cooling insights and resource-efficiency recommendations.
