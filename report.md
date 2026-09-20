@@ -1,3 +1,8 @@
+### AquaTherma AI
+
+## Overview
+
+AquaTherma AI is an AI-driven sustainability decision-support system designed to help understand data-center workload, thermal behavior, power usage, and cooling-resource opportunities. It combines Machine Learning, Explainable AI, RAG, and LLM-based recommendations in an interactive dashboard.
 ### Datasets
 
 * **DCGM Dataset:** Contains GPU utilization, memory utilization, power usage, energy consumption, and job execution data for analyzing computing workload and power demand.
@@ -28,219 +33,43 @@ SHAP Analysis: GPU and memory utilization were the dominant factors influencing 
 Dataset: final_dataset_std.csv (Data Centre Warm Channel Temperature Prediction Dataset)
 Trained a Random Forest Regression model to predict TLHC (hot-corridor temperature), achieving R² = 0.9583, MAE = 0.1423, and RMSE = 0.2038.
 
+## Datasets & ML
 
+### 1. `final_dataset_std.csv`
 
+Contains standardized thermal and system-related features. A Random Forest Regressor was trained to predict **TLHC (thermal load indicator)**.
 
+* Samples: 27,013
+* Features: 42 predictors
+* R²: **0.9583**
+* MAE: **0.1423**
 
-rough 
-from fastapi import APIRouter
-from pydantic import BaseModel
+### 2. `dcgm.csv`
 
-from backend.routes.gpu import GPUInput
-from backend.routes.thermal import ThermalInput
-from backend.models.model_loader import gpu_model, tlhc_model
-from backend.services.shap_service import (
-    explain_gpu,
-    explain_thermal
-)
+Contains GPU/DCGM utilization and power-related metrics. A Random Forest model predicts **average GPU power usage**.
 
-router = APIRouter()
+* Samples: 96,893
+* Features: 22 predictors
+* R²: **0.9833**
+* MAE: **3.79 W**
 
+### 3. `cooling_tower_dataset.csv`
 
-class AnalysisInput(BaseModel):
-    gpu: GPUInput
-    thermal: ThermalInput
+Contains cooling-tower operational reference data including water consumption, energy consumption, cooling capacity, efficiency, energy savings, and CO₂ emissions. This dataset is used as **contextual sustainability reference data**, not as a direct water-prediction model.
 
+## Explainable AI
 
-@router.post("/analyze")
-def analyze(data: AnalysisInput):
+SHAP is used to identify which features most influence GPU power and thermal predictions, making the ML outputs more interpretable.
 
-    # ---------- GPU POWER ----------
-    gpu_features = [[
-        data.gpu.avgmemoryutilization_pct,
-        data.gpu.avgsmutilization_pct,
-        data.gpu.memoryutilization_pct_avg,
-        data.gpu.memoryutilization_pct_max,
-        data.gpu.memoryutilization_pct_min,
-        data.gpu.pcierxbandwidth_megabytes_avg,
-        data.gpu.pcierxbandwidth_megabytes_max,
-        data.gpu.pcierxbandwidth_megabytes_min,
-        data.gpu.pcietxbandwidth_megabytes_avg,
-        data.gpu.pcietxbandwidth_megabytes_max,
-        data.gpu.pcietxbandwidth_megabytes_min,
-        data.gpu.totalexecutiontime_sec
-    ]]
+## RAG + LLM
 
-    gpu_prediction = gpu_model.predict(gpu_features)[0]
+Relevant sustainability and cooling knowledge is retrieved through a RAG pipeline and combined with model outputs. A Groq-hosted LLM converts these results into structured technical recommendations.
 
+## Dashboard
 
-    # ---------- THERMAL ----------
-    thermal_features = [[
-        data.thermal.P_ac_0, data.thermal.P_ac_1,
-        data.thermal.P_ac_2, data.thermal.P_ac_3,
-        data.thermal.P_ac_4, data.thermal.P_ac_5,
-        data.thermal.P_ac_6, data.thermal.P_ac_7,
+The React dashboard allows simulated GPU workload changes, runs the complete analysis pipeline, displays predictions and SHAP explanations, presents cooling-resource insights, and shows an **illustrative water-saving opportunity** based on reference data.
 
-        data.thermal.P_cu_0, data.thermal.P_cu_1,
-        data.thermal.P_cu_2, data.thermal.P_cu_3,
-        data.thermal.P_cu_4, data.thermal.P_cu_5,
-        data.thermal.P_cu_6, data.thermal.P_cu_7,
+## Technology
 
-        data.thermal.T_out_0, data.thermal.T_out_1,
-        data.thermal.T_out_2, data.thermal.T_out_3,
-        data.thermal.T_out_4, data.thermal.T_out_5,
-        data.thermal.T_out_6, data.thermal.T_out_7,
+**Python, FastAPI, Random Forest, SHAP, RAG, Groq LLM, React, Vite, MySQL, Git/GitHub.**
 
-        data.thermal.T_MEAS_0, data.thermal.T_MEAS_1,
-        data.thermal.T_MEAS_2, data.thermal.T_MEAS_3,
-        data.thermal.T_MEAS_4, data.thermal.T_MEAS_5,
-        data.thermal.T_MEAS_6, data.thermal.T_MEAS_7,
-
-        data.thermal.T_celCC_0, data.thermal.T_celCC_1,
-        data.thermal.T_celCC_2, data.thermal.T_celCC_3,
-        data.thermal.T_celCC_4, data.thermal.T_celCC_5,
-        data.thermal.T_celCC_6, data.thermal.T_celCC_7,
-
-        data.thermal.DoW,
-        data.thermal.WeH
-    ]]
-
-    thermal_prediction = tlhc_model.predict(thermal_features)[0]
-
-    gpu_explanation = explain_gpu(
-    gpu_features,
-    [
-        "avgmemoryutilization_pct",
-        "avgsmutilization_pct",
-        "memoryutilization_pct_avg",
-        "memoryutilization_pct_max",
-        "memoryutilization_pct_min",
-        "pcierxbandwidth_megabytes_avg",
-        "pcierxbandwidth_megabytes_max",
-        "pcierxbandwidth_megabytes_min",
-        "pcietxbandwidth_megabytes_avg",
-        "pcietxbandwidth_megabytes_max",
-        "pcietxbandwidth_megabytes_min",
-        "totalexecutiontime_sec"
-    ]
-)
-
-    thermal_explanation = explain_thermal(
-    thermal_features,
-    [
-        "P_ac_0", "P_ac_1", "P_ac_2", "P_ac_3",
-        "P_ac_4", "P_ac_5", "P_ac_6", "P_ac_7",
-
-        "P_cu_0", "P_cu_1", "P_cu_2", "P_cu_3",
-        "P_cu_4", "P_cu_5", "P_cu_6", "P_cu_7",
-
-        "T_out_0", "T_out_1", "T_out_2", "T_out_3",
-        "T_out_4", "T_out_5", "T_out_6", "T_out_7",
-
-        "T_MEAS_0", "T_MEAS_1", "T_MEAS_2", "T_MEAS_3",
-        "T_MEAS_4", "T_MEAS_5", "T_MEAS_6", "T_MEAS_7",
-
-        "T_celCC_0", "T_celCC_1", "T_celCC_2", "T_celCC_3",
-        "T_celCC_4", "T_celCC_5", "T_celCC_6", "T_celCC_7",
-
-        "DoW",
-        "WeH"
-    ]
-)
-
-
-    return {
-    "gpu_power_watts": round(
-        float(gpu_prediction), 2
-    ),
-
-    "tlhc_standardized": round(
-        float(thermal_prediction), 4
-    ),
-
-    "gpu_explanation": gpu_explanation,
-
-    "thermal_explanation": thermal_explanation,
-
-    "cooling_data": cooling_data,
-
-    "rag_context": retrieved_context,
-
-    "recommendation": recommendation
-}
-
-
-llm_service.py rough
-
-import os
-from dotenv import load_dotenv
-from groq import Groq
-
-load_dotenv()
-
-client = Groq(
-    api_key=os.getenv("GROQ_API_KEY")
-)
-
-
-def generate_recommendation(
-    gpu_power,
-    tlhc,
-    gpu_explanation,
-    thermal_explanation,
-    retrieved_context
-):
-
-    context = "\n\n".join(
-        item["text"] for item in retrieved_context
-    )
-
-    prompt = f"""
-You are an AI cooling analyst for Aquatherma AI.
-
-Use the provided ML predictions, SHAP explanations, and
-retrieved knowledge to give a concise cooling insight.
-
-ML Predictions:
-GPU Power: {gpu_power} W
-TLHC standardized prediction: {tlhc}
-
-GPU SHAP Explanation:
-{gpu_explanation}
-
-Thermal SHAP Explanation:
-{thermal_explanation}
-
-Retrieved Knowledge:
-{context}
-
-Give your response in this format:
-
-Cooling Insight:
-[one short paragraph]
-
-Recommended Action:
-[one practical action]
-
-Resource Efficiency:
-[one short sentence about energy/water efficiency]
-
-Important:
-- Do not claim causation from SHAP.
-- Do not interpret standardized TLHC as degrees Celsius.
-- Do not invent sensor readings or measurements.
-- Keep the answer practical and concise.
-"""
-
-    response = client.chat.completions.create(
-        model="openai/gpt-oss-20b",
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        temperature=0.2
-    )
-
-    return response.choices[0].message.content
